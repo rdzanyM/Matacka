@@ -6,10 +6,12 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.Random;
 
 public class Main extends Application {
 
@@ -18,11 +20,31 @@ public class Main extends Application {
     final double lineWidth = 3;
     double speed = 2;
     double angularSpeed = 0.03;
-    Player p = new Player(true, 0);
+    ArrayList<Player> humanPlayers = new ArrayList<>();
     int[][] collisionMatrix = new int[width][height];
+    ArrayList<KeyCode> keys = new ArrayList<KeyCode>() {{
+        add(KeyCode.LEFT);
+        add(KeyCode.RIGHT);
+        add(KeyCode.Q);
+        add(KeyCode.E);
+        add(KeyCode.DIGIT7);
+        add(KeyCode.DIGIT9);
+        add(KeyCode.Z);
+        add(KeyCode.C);
+        add(KeyCode.COMMA);
+        add(KeyCode.PERIOD);
+    }};
+    Random random = new Random();
 
     @Override
     public void start(Stage theStage) throws Exception{
+
+        humanPlayers.add(new Player(0));
+        humanPlayers.add(new Player(1));
+        humanPlayers.add(new Player(2));
+        humanPlayers.add(new Player(3));
+        humanPlayers.add(new Player(4));
+
         theStage.setTitle( "Canvas" );
 
         Group root = new Group();
@@ -30,24 +52,24 @@ public class Main extends Application {
         theStage.setScene( theScene );
 
         theScene.setOnKeyReleased(event -> {
-            switch (event.getCode())
+            for (int i = 0; i < humanPlayers.size() * 2; i++)
             {
-                case LEFT:
-                case RIGHT:
-                    p.direction = Player.Direction.Straight;
-                    break;
+                if(keys.get(i).equals(event.getCode()))
+                {
+                    humanPlayers.get(i / 2).direction = Player.Direction.Straight;
+                    return;
+                }
             }
         });
 
         theScene.setOnKeyPressed(event -> {
-            switch (event.getCode())
+            for (int i = 0; i < humanPlayers.size() * 2; i++)
             {
-                case LEFT:
-                    p.direction = Player.Direction.Left;
-                    break;
-                case RIGHT:
-                    p.direction = Player.Direction.Right;
-                    break;
+                if(keys.get(i).equals(event.getCode()))
+                {
+                    humanPlayers.get(i / 2).direction = (i % 2 == 0) ? Player.Direction.Left : Player.Direction.Right;
+                    return;
+                }
             }
         });
 
@@ -55,12 +77,15 @@ public class Main extends Application {
         root.getChildren().add(canvas);
 
         GraphicsContext gc = canvas.getGraphicsContext2D();
-
         gc.setFill( Color.RED );
         gc.setStroke( Color.BLACK );
         gc.setLineWidth(lineWidth);
-        p.angle = 0;
-        p.position = new Point2D.Double(20,100);
+
+        for (Player p : humanPlayers)
+        {
+            p.angle = random.nextDouble() * 2 * Math.PI;
+            p.position = new Point2D.Double(100 + random.nextInt(width - 200), 100 + random.nextInt(height - 200));
+        }
 
         theStage.show();
 
@@ -69,22 +94,26 @@ public class Main extends Application {
             @Override
             public void handle(long arg0) {
 
-                double px = p.position.getX() + speed * Math.cos(p.angle);
-                double py = p.position.getY() + speed * Math.sin(p.angle);
-
-                gc.strokeLine(p.position.getX(), p.position.getY(), p.position.getX(), p.position.getY());
-
-                if(p.direction.equals(Player.Direction.Right))
-                    p.angle += angularSpeed;
-                if(p.direction.equals(Player.Direction.Left))
-                    p.angle -= angularSpeed;
-
-                p.position.setLocation(px, py);
-                p.collisionValue++;
-
-                if(collide(px, py, p.collisionValue))
+                for (Player p : humanPlayers)
                 {
-                    gc.setStroke(Color.RED);
+                    double px = p.position.getX() + speed * Math.cos(p.angle);
+                    double py = p.position.getY() + speed * Math.sin(p.angle);
+
+                    gc.setStroke(p.color);
+                    gc.strokeLine(p.position.getX(), p.position.getY(), p.position.getX(), p.position.getY());
+
+                    if(p.direction.equals(Player.Direction.Right))
+                        p.angle += angularSpeed;
+                    if(p.direction.equals(Player.Direction.Left))
+                        p.angle -= angularSpeed;
+
+                    p.position.setLocation(px, py);
+                    p.collisionValue++;
+
+                    if(collide(px, py, p.collisionValue))
+                    {
+                        p.color = Color.BLACK;
+                    }
                 }
             }
         };
