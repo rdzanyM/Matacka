@@ -2,27 +2,24 @@ package sample;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.Image;
-import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 import java.awt.geom.Point2D;
-import java.io.FileInputStream;
 
 public class Main extends Application {
 
-    double speed = 1;
-    double angularSpeed = 0.01;
-    Player p = new Player(true);
+    final int width = 1000;
+    final int height = 500;
+    final double lineWidth = 3;
+    double speed = 2;
+    double angularSpeed = 0.03;
+    Player p = new Player(true, 0);
+    int[][] collisionMatrix = new int[width][height];
 
     @Override
     public void start(Stage theStage) throws Exception{
@@ -54,14 +51,14 @@ public class Main extends Application {
             }
         });
 
-        Canvas canvas = new Canvas( 900, 500 );
+        Canvas canvas = new Canvas( width, height );
         root.getChildren().add(canvas);
 
         GraphicsContext gc = canvas.getGraphicsContext2D();
 
         gc.setFill( Color.RED );
         gc.setStroke( Color.BLACK );
-        gc.setLineWidth(2);
+        gc.setLineWidth(lineWidth);
         p.angle = 0;
         p.position = new Point2D.Double(20,100);
 
@@ -72,22 +69,6 @@ public class Main extends Application {
             @Override
             public void handle(long arg0) {
 
-                // UPDATE
-                /*ballX += xSpeed;
-
-                if (ballX + ballRadius >= WIDTH)
-                {
-                    ballX = WIDTH - ballRadius;
-                    xSpeed *= -1;
-                }
-                else if (ballX - ballRadius < 0)
-                {
-                    ballX = 0 + ballRadius;
-                    xSpeed *= -1;
-                }
-
-                // RENDER
-                circle.setCenterX(ballX);*/
                 double px = p.position.getX() + speed * Math.cos(p.angle);
                 double py = p.position.getY() + speed * Math.sin(p.angle);
 
@@ -99,6 +80,12 @@ public class Main extends Application {
                     p.angle -= angularSpeed;
 
                 p.position.setLocation(px, py);
+                p.collisionValue++;
+
+                if(collide(px, py, p.collisionValue))
+                {
+                    gc.setStroke(Color.RED);
+                }
             }
         };
 
@@ -107,5 +94,24 @@ public class Main extends Application {
 
     public static void main(String[] args) {
         launch(args);
+    }
+
+    private boolean collide(double x, double y, int value)
+    {
+        int i1,i2,j1,j2;
+        i1 = (int)(x - lineWidth/2);
+        i2 = (int)(x + lineWidth/2);
+        j1 = (int)(y - lineWidth/2);
+        j2 = (int)(y + lineWidth/2);
+        if(i1 < 0 || j1 < 0 || i2 >= width || j2 >= height)
+            return true;
+        for (int i = i1; i <= i2; i++) {
+            for (int j = j1; j <= j2; j++) {
+                if(collisionMatrix[i][j] > 0 && Math.abs(collisionMatrix[i][j] - value) > 8)
+                    return true;
+                collisionMatrix[i][j] = value;
+            }
+        }
+        return false;
     }
 }
