@@ -12,18 +12,18 @@ import java.awt.geom.Point2D;
 
 public class Player {
 
-    public Point2D position;
-    public double angle;
-    public Direction direction = Direction.Straight;
+    Point2D position;
+    double angle;
+    Direction direction = Direction.Straight;
     private int id;
-    public int collisionValue;
+    int collisionValue;
     Paint color;
     private Display display;
     private int points = 0;
 
-    public Node getDisplay() { return display.root; }
+    Node getDisplay() { return display.root; }
 
-    public void addPoint()
+    void addPoint()
     {
         points++;
         display.points.setText(Integer.toString(points));
@@ -37,11 +37,12 @@ public class Player {
 
     public int getPoints() { return points; }
 
-    public Player(int id)
+    Player(int id)
     {
         this.id = id;
         collisionValue = id * 666666;
-        color = Color.hsb(id * 150,1,1);
+        //noinspection IntegerDivisionInFloatingPointContext
+        color = Color.hsb(id % 6 * 60 + id / 6 * 30,1,1);
         display = new Display(color);
     }
 
@@ -56,7 +57,7 @@ public class Player {
         private Label points = new Label("0");
         private Pane icon;
 
-        public Display(Paint color)
+        Display(Paint color)
         {
             Circle c = new Circle(20, 20, 12, color);
             icon = new Pane(c);

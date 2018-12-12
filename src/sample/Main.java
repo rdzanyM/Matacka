@@ -2,56 +2,52 @@ package sample;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.ChoiceDialog;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Main extends Application {
 
-    final int width = 1000;
-    final int height = 600;
-    final double lineWidth = 3;
-    double speed = 2;
-    double angularSpeed = 0.03;
-    ArrayList<Player> humanPlayers = new ArrayList<>();
-    int[][] collisionMatrix = new int[width][height];
-    ArrayList<KeyCode> keys = new ArrayList<KeyCode>() {{
-        add(KeyCode.LEFT);
-        add(KeyCode.RIGHT);
-        add(KeyCode.Q);
-        add(KeyCode.E);
-        add(KeyCode.DIGIT7);
-        add(KeyCode.DIGIT9);
-        add(KeyCode.Z);
-        add(KeyCode.C);
-        add(KeyCode.COMMA);
-        add(KeyCode.PERIOD);
+    private final int width = 1000;
+    private final int height = 600;
+    private final double lineWidth = 3;
+    private double speed = 2;
+    private double angularSpeed = 0.03;
+    private ArrayList<Player> humanPlayers = new ArrayList<>();
+    private int[][] collisionMatrix = new int[width][height];
+    private ArrayList<KeyCode> keys = new ArrayList<KeyCode>() {{
+        add(KeyCode.LEFT);  add(KeyCode.RIGHT);
+        add(KeyCode.Q);     add(KeyCode.E);
+        add(KeyCode.DIGIT7);add(KeyCode.DIGIT9);
+        add(KeyCode.Z);     add(KeyCode.C);
+        add(KeyCode.COMMA); add(KeyCode.PERIOD);
     }};
-    Random random = new Random();
+    private Random random = new Random();
 
     @Override
-    public void start(Stage theStage) throws Exception{
-
-        humanPlayers.add(new Player(0));
-        humanPlayers.add(new Player(1));
-        humanPlayers.add(new Player(2));
-        humanPlayers.add(new Player(3));
-        humanPlayers.add(new Player(4));
-
+    public void start(Stage theStage)
+    {
         theStage.setTitle( "Matacka" );
 
-        HBox root = new HBox();
-        Scene theScene = new Scene( root );
+        HBox gameArea = new HBox();
+        StackPane root = new StackPane();
+        root.getChildren().add(gameArea);
+        Scene theScene = new Scene(root);
         theStage.setScene( theScene );
 
         theScene.setOnKeyReleased(event -> {
@@ -79,6 +75,9 @@ public class Main extends Application {
         Pane pane = new Pane();
         pane.setPrefSize(4,height);
         VBox scoreboard = new VBox();
+
+        setPlayers();
+
         for (Player p : humanPlayers)
         {
             scoreboard.getChildren().add(p.getDisplay());
@@ -86,8 +85,8 @@ public class Main extends Application {
             p.position = new Point2D.Double(100 + random.nextInt(width - 200), 100 + random.nextInt(height - 200));
         }
         pane.setStyle("-fx-background-color: #E0F0FF");
-        root.setStyle("-fx-background-color: #FFFFFF");
-        root.getChildren().addAll(canvas, pane, scoreboard);
+        gameArea.setStyle("-fx-background-color: #FFFFFF");
+        gameArea.getChildren().addAll(canvas, pane, scoreboard);
 
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setFill( Color.RED );
@@ -127,6 +126,25 @@ public class Main extends Application {
         };
 
         animator.start();
+    }
+
+    private void setPlayers()
+    {
+        humanPlayers.clear();
+        int players = 2;
+        List<Integer> choices = IntStream.rangeClosed(2, 12).boxed().collect(Collectors.toList());
+
+        ChoiceDialog<Integer> dialog = new ChoiceDialog<>(2, choices);
+        dialog.setTitle("Game settings");
+        dialog.setHeaderText("Choose the number of players");
+        dialog.setContentText("Total players:");
+
+        Optional<Integer> result = dialog.showAndWait();
+        if (result.isPresent())
+            players = result.get();
+
+        for (int i = 0; i < players; i++)
+            humanPlayers.add(new Player(i));
     }
 
     private boolean collide(double x, double y, int value)
