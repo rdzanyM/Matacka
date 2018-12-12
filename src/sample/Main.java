@@ -7,6 +7,9 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import java.awt.geom.Point2D;
@@ -16,7 +19,7 @@ import java.util.Random;
 public class Main extends Application {
 
     final int width = 1000;
-    final int height = 500;
+    final int height = 600;
     final double lineWidth = 3;
     double speed = 2;
     double angularSpeed = 0.03;
@@ -45,9 +48,9 @@ public class Main extends Application {
         humanPlayers.add(new Player(3));
         humanPlayers.add(new Player(4));
 
-        theStage.setTitle( "Canvas" );
+        theStage.setTitle( "Matacka" );
 
-        Group root = new Group();
+        HBox root = new HBox();
         Scene theScene = new Scene( root );
         theStage.setScene( theScene );
 
@@ -61,7 +64,6 @@ public class Main extends Application {
                 }
             }
         });
-
         theScene.setOnKeyPressed(event -> {
             for (int i = 0; i < humanPlayers.size() * 2; i++)
             {
@@ -74,26 +76,31 @@ public class Main extends Application {
         });
 
         Canvas canvas = new Canvas( width, height );
-        root.getChildren().add(canvas);
+        Pane pane = new Pane();
+        pane.setPrefSize(4,height);
+        VBox scoreboard = new VBox();
+        for (Player p : humanPlayers)
+        {
+            scoreboard.getChildren().add(p.getDisplay());
+            p.angle = random.nextDouble() * 2 * Math.PI;
+            p.position = new Point2D.Double(100 + random.nextInt(width - 200), 100 + random.nextInt(height - 200));
+        }
+        pane.setStyle("-fx-background-color: #E0F0FF");
+        root.setStyle("-fx-background-color: #FFFFFF");
+        root.getChildren().addAll(canvas, pane, scoreboard);
 
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setFill( Color.RED );
         gc.setStroke( Color.BLACK );
         gc.setLineWidth(lineWidth);
 
-        for (Player p : humanPlayers)
-        {
-            p.angle = random.nextDouble() * 2 * Math.PI;
-            p.position = new Point2D.Double(100 + random.nextInt(width - 200), 100 + random.nextInt(height - 200));
-        }
-
         theStage.show();
 
-        AnimationTimer animator = new AnimationTimer(){
-
+        AnimationTimer animator = new AnimationTimer()
+        {
             @Override
-            public void handle(long arg0) {
-
+            public void handle(long arg0)
+            {
                 for (Player p : humanPlayers)
                 {
                     double px = p.position.getX() + speed * Math.cos(p.angle);
@@ -113,16 +120,13 @@ public class Main extends Application {
                     if(collide(px, py, p.collisionValue))
                     {
                         p.color = Color.BLACK;
+                        p.addPoint();
                     }
                 }
             }
         };
 
         animator.start();
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 
     private boolean collide(double x, double y, int value)
@@ -134,13 +138,20 @@ public class Main extends Application {
         j2 = (int)(y + lineWidth/2);
         if(i1 < 0 || j1 < 0 || i2 >= width || j2 >= height)
             return true;
-        for (int i = i1; i <= i2; i++) {
-            for (int j = j1; j <= j2; j++) {
+        for (int i = i1; i <= i2; i++)
+        {
+            for (int j = j1; j <= j2; j++)
+            {
                 if(collisionMatrix[i][j] > 0 && Math.abs(collisionMatrix[i][j] - value) > 8)
                     return true;
                 collisionMatrix[i][j] = value;
             }
         }
         return false;
+    }
+
+    public static void main(String[] args)
+    {
+        launch(args);
     }
 }
