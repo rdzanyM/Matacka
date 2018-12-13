@@ -14,10 +14,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -38,12 +35,12 @@ public class Main extends Application {
         add(KeyCode.COMMA); add(KeyCode.PERIOD);
     }};
     private Random random = new Random();
+    private List<Integer> activePlayers = new LinkedList<>();
 
     @Override
     public void start(Stage theStage)
     {
         theStage.setTitle( "Matacka" );
-
         HBox gameArea = new HBox();
         StackPane root = new StackPane();
         root.getChildren().add(gameArea);
@@ -75,6 +72,11 @@ public class Main extends Application {
         Pane pane = new Pane();
         pane.setPrefSize(4,height);
         VBox scoreboard = new VBox();
+        pane.setStyle("-fx-background-color: #E0F0FF");
+        gameArea.setStyle("-fx-background-color: #FFFFFF");
+        gameArea.getChildren().addAll(canvas, pane, scoreboard);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.setLineWidth(lineWidth);
 
         setPlayers();
 
@@ -84,14 +86,7 @@ public class Main extends Application {
             p.angle = random.nextDouble() * 2 * Math.PI;
             p.position = new Point2D.Double(100 + random.nextInt(width - 200), 100 + random.nextInt(height - 200));
         }
-        pane.setStyle("-fx-background-color: #E0F0FF");
-        gameArea.setStyle("-fx-background-color: #FFFFFF");
-        gameArea.getChildren().addAll(canvas, pane, scoreboard);
 
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        gc.setFill( Color.RED );
-        gc.setStroke( Color.BLACK );
-        gc.setLineWidth(lineWidth);
 
         theStage.show();
 
@@ -100,8 +95,11 @@ public class Main extends Application {
             @Override
             public void handle(long arg0)
             {
-                for (Player p : humanPlayers)
+                Collections.shuffle(activePlayers);
+                LinkedList<Integer> unlucky = new LinkedList<>();
+                for (int i : activePlayers)
                 {
+                    Player p = humanPlayers.get(i);
                     double px = p.position.getX() + speed * Math.cos(p.angle);
                     double py = p.position.getY() + speed * Math.sin(p.angle);
 
@@ -118,14 +116,24 @@ public class Main extends Application {
 
                     if(collide(px, py, p.collisionValue))
                     {
-                        p.color = Color.BLACK;
-                        p.addPoint();
+                        unlucky.push(i);
                     }
+                }
+                for (int i : unlucky)
+                {
+                    humanPlayers.get(i).addPoints(unlucky.size() - 1);
+                    activePlayers.remove(Integer.valueOf(i));
+                }
+                for (int i : activePlayers)
+                {
+                    humanPlayers.get(i).addPoints(unlucky.size());
                 }
             }
         };
 
+        activePlayers = IntStream.rangeClosed(0, humanPlayers.size() - 1).boxed().collect(Collectors.toList());
         animator.start();
+
     }
 
     private void setPlayers()

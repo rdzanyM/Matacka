@@ -23,15 +23,9 @@ public class Player {
 
     Node getDisplay() { return display.root; }
 
-    void addPoint()
+    void addPoints(int p)
     {
-        points++;
-        display.points.setText(Integer.toString(points));
-    }
-
-    public void setPoints(int points)
-    {
-        this.points = points;
+        points += p;
         display.points.setText(Integer.toString(points));
     }
 
