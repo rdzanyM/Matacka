@@ -20,6 +20,7 @@ public class Player {
     Paint color;
     private Display display;
     private int points = 0;
+    int hole = 0;
 
     Node getDisplay() { return display.root; }
 

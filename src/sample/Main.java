@@ -11,7 +11,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import java.awt.geom.Point2D;
 import java.util.*;
@@ -36,6 +35,7 @@ public class Main extends Application {
     }};
     private Random random = new Random();
     private List<Integer> activePlayers = new LinkedList<>();
+    private double chance = 3e-3;
 
     @Override
     public void start(Stage theStage)
@@ -102,22 +102,26 @@ public class Main extends Application {
                     Player p = humanPlayers.get(i);
                     double px = p.position.getX() + speed * Math.cos(p.angle);
                     double py = p.position.getY() + speed * Math.sin(p.angle);
-
-                    gc.setStroke(p.color);
-                    gc.strokeLine(p.position.getX(), p.position.getY(), p.position.getX(), p.position.getY());
-
                     if(p.direction.equals(Player.Direction.Right))
                         p.angle += angularSpeed;
                     if(p.direction.equals(Player.Direction.Left))
                         p.angle -= angularSpeed;
-
-                    p.position.setLocation(px, py);
                     p.collisionValue++;
 
-                    if(collide(px, py, p.collisionValue))
+                    if(random.nextDouble() < chance)
+                        p.hole = 10;
+                    if(p.hole > 0)
+                        p.hole--;
+                    else
                     {
-                        unlucky.push(i);
+                        gc.setStroke(p.color);
+                        gc.strokeLine(p.position.getX(), p.position.getY(), px, py);
+                        if(collide(px, py, p.collisionValue))
+                            unlucky.push(i);
                     }
+
+                    p.position.setLocation(px, py);
+
                 }
                 for (int i : unlucky)
                 {
