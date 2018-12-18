@@ -19,11 +19,12 @@ import java.util.stream.IntStream;
 
 public class Main extends Application {
 
-    private final int width = 1000;
-    private final int height = 600;
-    private final double lineWidth = 3;
-    private double speed = 2;
-    private double angularSpeed = 0.03;
+    private final int width = 1200;     //width  of game area
+    private final int height = 800;     //height of game area
+    private final double lineWidth = 3; //width of players' trails
+    private final double speed = 2;             //players' speed
+    private final double angularSpeed = 0.03;   //players' angular speed
+                                                //players' minimal turn radius is speed/angularSpeed
     private ArrayList<Player> humanPlayers = new ArrayList<>();
     private int[][] collisionMatrix = new int[width][height];
     private ArrayList<KeyCode> keys = new ArrayList<KeyCode>() {{
@@ -34,8 +35,8 @@ public class Main extends Application {
         add(KeyCode.COMMA); add(KeyCode.PERIOD);
     }};
     private Random random = new Random();
-    private List<Integer> activePlayers = new LinkedList<>();
-    private double chance = 3e-3;
+    private List<Integer> activePlayers = new LinkedList<>();   //list of ids of active(still moving) players in a round
+    private double chance = 3e-3;                               //chance that trail drawing will be suppressed in a frame
 
     @Override
     public void start(Stage theStage)
@@ -83,8 +84,6 @@ public class Main extends Application {
         for (Player p : humanPlayers)
         {
             scoreboard.getChildren().add(p.getDisplay());
-            p.angle = random.nextDouble() * 2 * Math.PI;
-            p.position = new Point2D.Double(100 + random.nextInt(width - 200), 100 + random.nextInt(height - 200));
         }
 
 
@@ -95,6 +94,20 @@ public class Main extends Application {
             @Override
             public void handle(long arg0)
             {
+                if(activePlayers.isEmpty())
+                {
+                    for (int i = 0; i < width; i++)
+                        for (int j = 0; j < height; j++)
+                            collisionMatrix[i][j] = 0;
+                    collisionMatrix = new int[width][height];
+                    gc.clearRect(0,0,width,height);
+                    activePlayers = IntStream.rangeClosed(0, humanPlayers.size() - 1).boxed().collect(Collectors.toList());
+                    for (Player p : humanPlayers)
+                    {
+                        p.angle = random.nextDouble() * 2 * Math.PI;
+                        p.position = new Point2D.Double(100 + random.nextInt(width - 200), 100 + random.nextInt(height - 200));
+                    }
+                }
                 Collections.shuffle(activePlayers);
                 LinkedList<Integer> unlucky = new LinkedList<>();
                 for (int i : activePlayers)
@@ -135,7 +148,6 @@ public class Main extends Application {
             }
         };
 
-        activePlayers = IntStream.rangeClosed(0, humanPlayers.size() - 1).boxed().collect(Collectors.toList());
         animator.start();
 
     }
