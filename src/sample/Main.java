@@ -69,16 +69,16 @@ public class Main extends Application {
                 }
             }
         });
-
-        Group gameArea = new Group();
         Canvas canvas = new Canvas( width, height );
-        gameArea.getChildren().add(canvas);
-        Pane pane = new Pane();
-        pane.setPrefSize(4,height);
+        Pane gameArea = new Pane(canvas);
+        gameArea.setMaxWidth(width);
+        gameArea.setMaxHeight(height);
+        Pane borderLine = new Pane();
+        borderLine.setPrefSize(4,height);
         VBox scoreboard = new VBox();
-        pane.setStyle("-fx-background-color: #E0F0FF");
+        borderLine.setStyle("-fx-background-color: #E0F0FF");
         gameWindow.setStyle("-fx-background-color: #FFFFFF");
-        gameWindow.getChildren().addAll(gameArea, pane, scoreboard);
+        gameWindow.getChildren().addAll(gameArea, borderLine, scoreboard);
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setLineWidth(lineWidth);
 
@@ -121,15 +121,15 @@ public class Main extends Application {
                     Player p = humanPlayers.get(i);
                     double px = p.getX() + speed * Math.cos(p.angle);
                     double py = p.getY() + speed * Math.sin(p.angle);
-                    if(p.direction.equals(Player.Direction.Right))
+                    if (p.direction.equals(Player.Direction.Right))
                         p.angle += angularSpeed;
-                    if(p.direction.equals(Player.Direction.Left))
+                    if (p.direction.equals(Player.Direction.Left))
                         p.angle -= angularSpeed;
                     p.collisionValue++;
 
-                    if(random.nextDouble() < chance)
+                    if (random.nextDouble() < chance)
                         p.hole = 10;
-                    if(p.hole > 0)
+                    if (p.hole > 0)
                         p.hole--;
                     else
                     {
@@ -138,7 +138,6 @@ public class Main extends Application {
                         if(collide(px, py, p.collisionValue))
                             unlucky.push(i);
                     }
-
                     p.setPosition(px, py);
 
                 }
