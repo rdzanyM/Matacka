@@ -2,6 +2,7 @@ package sample;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -42,9 +43,9 @@ public class Main extends Application {
     public void start(Stage theStage)
     {
         theStage.setTitle( "Matacka" );
-        HBox gameArea = new HBox();
+        HBox gameWindow = new HBox();
         StackPane root = new StackPane();
-        root.getChildren().add(gameArea);
+        root.getChildren().add(gameWindow);
         Scene theScene = new Scene(root);
         theStage.setScene( theScene );
 
@@ -69,13 +70,15 @@ public class Main extends Application {
             }
         });
 
+        Group gameArea = new Group();
         Canvas canvas = new Canvas( width, height );
+        gameArea.getChildren().add(canvas);
         Pane pane = new Pane();
         pane.setPrefSize(4,height);
         VBox scoreboard = new VBox();
         pane.setStyle("-fx-background-color: #E0F0FF");
-        gameArea.setStyle("-fx-background-color: #FFFFFF");
-        gameArea.getChildren().addAll(canvas, pane, scoreboard);
+        gameWindow.setStyle("-fx-background-color: #FFFFFF");
+        gameWindow.getChildren().addAll(gameArea, pane, scoreboard);
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setLineWidth(lineWidth);
 
@@ -84,6 +87,7 @@ public class Main extends Application {
         for (Player p : humanPlayers)
         {
             scoreboard.getChildren().add(p.getDisplay());
+            gameArea.getChildren().add(p.getHead());
         }
 
 
@@ -105,7 +109,7 @@ public class Main extends Application {
                     for (Player p : humanPlayers)
                     {
                         p.angle = random.nextDouble() * 2 * Math.PI;
-                        p.position = new Point2D.Double(100 + random.nextInt(width - 200), 100 + random.nextInt(height - 200));
+                        p.setPosition(100 + random.nextInt(width - 200), 100 + random.nextInt(height - 200));
                     }
                 }
                 Collections.shuffle(activePlayers);
@@ -113,8 +117,8 @@ public class Main extends Application {
                 for (int i : activePlayers)
                 {
                     Player p = humanPlayers.get(i);
-                    double px = p.position.getX() + speed * Math.cos(p.angle);
-                    double py = p.position.getY() + speed * Math.sin(p.angle);
+                    double px = p.getX() + speed * Math.cos(p.angle);
+                    double py = p.getY() + speed * Math.sin(p.angle);
                     if(p.direction.equals(Player.Direction.Right))
                         p.angle += angularSpeed;
                     if(p.direction.equals(Player.Direction.Left))
@@ -128,12 +132,12 @@ public class Main extends Application {
                     else
                     {
                         gc.setStroke(p.color);
-                        gc.strokeLine(p.position.getX(), p.position.getY(), px, py);
+                        gc.strokeLine(p.getX(), p.getY(), px, py);
                         if(collide(px, py, p.collisionValue))
                             unlucky.push(i);
                     }
 
-                    p.position.setLocation(px, py);
+                    p.setPosition(px, py);
 
                 }
                 for (int i : unlucky)
