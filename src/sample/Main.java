@@ -13,7 +13,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import java.awt.geom.Point2D;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -23,7 +22,8 @@ public class Main extends Application {
     private final int width = 1200;     //width  of game area
     private final int height = 800;     //height of game area
     private final double lineWidth = 3; //width of players' trails
-    private final double speed = 2;             //players' speed
+    private double speed;                       //players' real speed (lower than max at the beginning of a round)
+    private final double maxSpeed = 2;          //players' regular speed
     private final double angularSpeed = 0.03;   //players' angular speed
                                                 //players' minimal turn radius is speed/angularSpeed
     private ArrayList<Player> humanPlayers = new ArrayList<>();
@@ -111,7 +111,9 @@ public class Main extends Application {
                         p.angle = random.nextDouble() * 2 * Math.PI;
                         p.setPosition(100 + random.nextInt(width - 200), 100 + random.nextInt(height - 200));
                     }
+                    speed = 1e-1;
                 }
+                if(speed < maxSpeed) speed += 0.01;
                 Collections.shuffle(activePlayers);
                 LinkedList<Integer> unlucky = new LinkedList<>();
                 for (int i : activePlayers)
@@ -188,7 +190,7 @@ public class Main extends Application {
         {
             for (int j = j1; j <= j2; j++)
             {
-                if(collisionMatrix[i][j] > 0 && Math.abs(collisionMatrix[i][j] - value) > 8)
+                if(collisionMatrix[i][j] > 0 && Math.abs(collisionMatrix[i][j] - value) > 0xf)
                     return true;
                 collisionMatrix[i][j] = value;
             }
