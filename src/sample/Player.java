@@ -74,4 +74,16 @@ class Player {
     }
 }
 
+class ComputerPlayer extends Player
+{
+    ComputerPlayer(int id)
+    {
+        super(id);
+    }
+
+    Direction computedDiretion;
+
+
+}
+
 

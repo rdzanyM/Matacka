@@ -2,16 +2,12 @@ package sample;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,7 +22,9 @@ public class Main extends Application {
     private final double maxSpeed = 2;          //players' regular speed
     private final double angularSpeed = 0.03;   //players' angular speed
                                                 //players' minimal turn radius is speed/angularSpeed
+    private ArrayList<Player> players = new ArrayList<>();
     private ArrayList<Player> humanPlayers = new ArrayList<>();
+    private ArrayList<ComputerPlayer> computerPlayers = new ArrayList<>();
     private int[][] collisionMatrix = new int[width][height];
     private ArrayList<KeyCode> keys = new ArrayList<KeyCode>() {{
         add(KeyCode.LEFT);  add(KeyCode.RIGHT);
@@ -84,7 +82,7 @@ public class Main extends Application {
 
         setPlayers();
 
-        for (Player p : humanPlayers)
+        for (Player p : players)
         {
             scoreboard.getChildren().add(p.getDisplay());
             gameArea.getChildren().add(p.getHead());
@@ -105,8 +103,8 @@ public class Main extends Application {
                             collisionMatrix[i][j] = 0;
                     collisionMatrix = new int[width][height];
                     gc.clearRect(0,0,width,height);
-                    activePlayers = IntStream.rangeClosed(0, humanPlayers.size() - 1).boxed().collect(Collectors.toList());
-                    for (Player p : humanPlayers)
+                    activePlayers = IntStream.rangeClosed(0, players.size() - 1).boxed().collect(Collectors.toList());
+                    for (Player p : players)
                     {
                         p.angle = random.nextDouble() * 2 * Math.PI;
                         p.setPosition(100 + random.nextInt(width - 200), 100 + random.nextInt(height - 200));
@@ -118,7 +116,7 @@ public class Main extends Application {
                 LinkedList<Integer> unlucky = new LinkedList<>();
                 for (int i : activePlayers)
                 {
-                    Player p = humanPlayers.get(i);
+                    Player p = players.get(i);
                     double px = p.getX() + speed * Math.cos(p.angle);
                     double py = p.getY() + speed * Math.sin(p.angle);
                     if (p.direction.equals(Player.Direction.Right))
@@ -143,12 +141,12 @@ public class Main extends Application {
                 }
                 for (int i : unlucky)
                 {
-                    humanPlayers.get(i).addPoints(unlucky.size() - 1);
+                    players.get(i).addPoints(unlucky.size() - 1);
                     activePlayers.remove(Integer.valueOf(i));
                 }
                 for (int i : activePlayers)
                 {
-                    humanPlayers.get(i).addPoints(unlucky.size());
+                    players.get(i).addPoints(unlucky.size());
                 }
             }
         };
@@ -159,21 +157,42 @@ public class Main extends Application {
 
     private void setPlayers()
     {
+        players.clear();
         humanPlayers.clear();
-        int players = 2;
-        List<Integer> choices = IntStream.rangeClosed(2, 12).boxed().collect(Collectors.toList());
-
-        ChoiceDialog<Integer> dialog = new ChoiceDialog<>(2, choices);
+        int total = 2;
+        int humans = 1;
+        List<Integer> choices;
+        Optional<Integer> result;
+        ChoiceDialog<Integer> dialog;
+        choices = IntStream.rangeClosed(2, 12).boxed().collect(Collectors.toList());
+        dialog = new ChoiceDialog<>(2, choices);
         dialog.setTitle("Game settings");
-        dialog.setHeaderText("Choose the number of players");
+        dialog.setHeaderText("Choose the total number of players");
         dialog.setContentText("Total players:");
-
-        Optional<Integer> result = dialog.showAndWait();
+        result = dialog.showAndWait();
         if (result.isPresent())
-            players = result.get();
+            total = result.get();
+        choices = IntStream.rangeClosed(0, total).boxed().collect(Collectors.toList());
+        dialog = new ChoiceDialog<>(1, choices);
+        dialog.setTitle("Game settings");
+        dialog.setHeaderText("Choose the number of human players");
+        dialog.setContentText("Human players:");
+        result = dialog.showAndWait();
+        if (result.isPresent())
+            humans = result.get();
 
-        for (int i = 0; i < players; i++)
-            humanPlayers.add(new Player(i));
+        for (int i = 0; i < humans; i++)
+        {
+            Player p = new Player(i);
+            players.add(p);
+            humanPlayers.add(p);
+        }
+        for (int i = humans; i < total; i++)
+        {
+            ComputerPlayer p = new ComputerPlayer(i);
+            players.add(p);
+            computerPlayers.add(p);
+        }
     }
 
     private boolean collide(double x, double y, int value)
@@ -186,6 +205,7 @@ public class Main extends Application {
         if(i1 < 0 || j1 < 0 || i2 >= width || j2 >= height)
             return true;
         for (int i = i1; i <= i2; i++)
+
         {
             for (int j = j1; j <= j2; j++)
             {
