@@ -9,6 +9,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import java.awt.geom.Point2D;
+import java.util.*;
 
 class Player {
 
@@ -76,14 +77,99 @@ class Player {
 
 class ComputerPlayer extends Player
 {
-    ComputerPlayer(int id)
+    ComputerPlayer(int id, double speed, double angularSpeed, double lineWidth, int width, int height)
     {
         super(id);
+        this.speed = speed;
+        this.angularSpeed = angularSpeed;
+        this.lineWidth = lineWidth;
+        this.width = width;
+        this.height = height;
     }
 
-    Direction computedDiretion;
+    Direction computedDiretion = Direction.Straight;
+    private int computedDepth;
+    private double speed;
+    private double angularSpeed;
+    private double lineWidth;
+    private int width;
+    private int height;
 
+    void computeInit(int[][] map)
+    {
+        computedDepth = 0;
+        int[][] mapCopy = Clone(map, width, height);
+        compute(mapCopy, Direction.Straight, 1, Direction.Straight, getX(), getY(), angle, collisionValue);
+        compute(mapCopy, Direction.Right,    1, Direction.Right,    getX(), getY(), angle, collisionValue);
+        compute(mapCopy, Direction.Left,     1, Direction.Left,     getX(), getY(), angle, collisionValue);
+    }
 
+    private void compute(int[][] map, Direction prev, int depth, Direction initial, double x, double y, double a, int cv)
+    {
+        if(depth > 8) return;
+        for(int i = 0; i < decisionGap(depth); i++)
+        {
+            x += speed * Math.cos(a);
+            y += speed * Math.sin(a);
+            switch (prev)
+            {
+                case Left:
+                    a -= angularSpeed;
+                    break;
+                case Right:
+                    a += angularSpeed;
+                    break;
+            }
+            cv++;
+            if (collide(x, y, cv, map)) return;
+
+        }
+        if(depth > computedDepth)
+        {
+            computedDepth = depth;
+            computedDiretion = initial;
+        }
+        compute(map, Direction.Straight, depth + 1, initial, x, y, a, cv);
+        compute(map, Direction.Right,    depth + 1, initial, x, y, a, cv);
+        compute(map, Direction.Left,     depth + 1, initial, x, y, a, cv);
+    }
+
+    private int decisionGap(int depth)
+    {
+        return 10*depth;
+    }
+
+    private int[][] Clone(int[][] array, int width, int height)
+    {
+        int[][] newArray = new int[width][height];
+        for(int i = 0; i < width; i++)
+        {
+            if (height >= 0) System.arraycopy(array[i], 0, newArray[i], 0, height);
+        }
+        return newArray;
+    }
+
+    private boolean collide(double x, double y, int value, int[][] map)
+    {
+        int i1,i2,j1,j2;
+        i1 = (int)(x - lineWidth/2);
+        i2 = (int)(x + lineWidth/2);
+        j1 = (int)(y - lineWidth/2);
+        j2 = (int)(y + lineWidth/2);
+        if(i1 < 0 || j1 < 0 || i2 >= width || j2 >= height)
+            return true;
+        for (int i = i1; i <= i2; i++)
+
+        {
+            for (int j = j1; j <= j2; j++)
+            {
+                if(map[i][j] > 0 && Math.abs(map[i][j] - value) > 0xf)
+                    return true;
+                map[i][j] = value;
+            }
+        }
+        return false;
+    }
 }
 
 

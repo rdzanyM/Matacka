@@ -15,6 +15,7 @@ import java.util.stream.IntStream;
 
 public class Main extends Application {
 
+    private int counter = 0;
     private final int width = 1200;     //width  of game area
     private final int height = 800;     //height of game area
     private final double lineWidth = 3; //width of players' trails
@@ -110,10 +111,23 @@ public class Main extends Application {
                         p.setPosition(100 + random.nextInt(width - 200), 100 + random.nextInt(height - 200));
                     }
                     speed = 1e-1;
+                    counter = 0;
                 }
                 if(speed < maxSpeed) speed += 0.01;
                 Collections.shuffle(activePlayers);
                 LinkedList<Integer> unlucky = new LinkedList<>();
+                if(counter % 10 == 0)
+                {
+                    for (int i : activePlayers)
+                    {
+                        if(i >= humanPlayers.size())
+                        {
+                            ComputerPlayer p = computerPlayers.get(i - humanPlayers.size());
+                            p.computeInit(collisionMatrix);
+                            p.direction = p.computedDiretion;
+                        }
+                    }
+                }
                 for (int i : activePlayers)
                 {
                     Player p = players.get(i);
@@ -150,9 +164,7 @@ public class Main extends Application {
                 }
             }
         };
-
         animator.start();
-
     }
 
     private void setPlayers()
@@ -189,7 +201,7 @@ public class Main extends Application {
         }
         for (int i = humans; i < total; i++)
         {
-            ComputerPlayer p = new ComputerPlayer(i);
+            ComputerPlayer p = new ComputerPlayer(i, maxSpeed, angularSpeed, lineWidth, width, height);
             players.add(p);
             computerPlayers.add(p);
         }
