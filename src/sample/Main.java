@@ -16,7 +16,7 @@ import java.util.stream.IntStream;
 public class Main extends Application {
 
     private int counter = 0;
-    private final int width = 1200;     //width  of game area
+    private final int width = 1024;     //width  of game area
     private final int height = 800;     //height of game area
     private final double lineWidth = 3; //width of players' trails
     private double speed;                       //players' real speed (lower than max at the beginning of a round)
@@ -116,7 +116,7 @@ public class Main extends Application {
                 if(speed < maxSpeed) speed += 0.01;
                 Collections.shuffle(activePlayers);
                 LinkedList<Integer> unlucky = new LinkedList<>();
-                if(counter % 10 == 0)
+                if(counter % 6 == 0)
                 {
                     for (int i : activePlayers)
                     {
@@ -205,6 +205,7 @@ public class Main extends Application {
             players.add(p);
             computerPlayers.add(p);
         }
+        ComputerPlayer.players = players;
     }
 
     private boolean collide(double x, double y, int value)

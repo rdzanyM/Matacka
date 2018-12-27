@@ -16,7 +16,7 @@ class Player {
     Paint color;    //trail color
     double angle;   //velocity angle
     int hole = 0;   //number of frames without drawing trail
-    private int id;
+    int id;
     int collisionValue;
     private int points = 0;
     private Display display;    //how player is shown on the scoreboard
@@ -94,19 +94,31 @@ class ComputerPlayer extends Player
     private double lineWidth;
     private int width;
     private int height;
+    static ArrayList<Player> players;
+    private int safeDistance;
+    private boolean found;
 
     void computeInit(int[][] map)
     {
-        computedDepth = 0;
         int[][] mapCopy = Clone(map, width, height);
+        computedDepth = 0;
+        safeDistance = 0;
+        found = false;
         compute(mapCopy, Direction.Straight, 1, Direction.Straight, getX(), getY(), angle, collisionValue);
+        safeDistance = 0;
         compute(mapCopy, Direction.Right,    1, Direction.Right,    getX(), getY(), angle, collisionValue);
+        safeDistance = 0;
         compute(mapCopy, Direction.Left,     1, Direction.Left,     getX(), getY(), angle, collisionValue);
     }
 
     private void compute(int[][] map, Direction prev, int depth, Direction initial, double x, double y, double a, int cv)
     {
-        if(depth > 8) return;
+        if(found) return;
+        if(depth > 10)
+        {
+            found = true;
+            return;
+        }
         for(int i = 0; i < decisionGap(depth); i++)
         {
             x += speed * Math.cos(a);
@@ -122,8 +134,11 @@ class ComputerPlayer extends Player
             }
             cv++;
             if (collide(x, y, cv, map)) return;
-
         }
+        if(safeDistance < 100)
+            safeDistance += decisionGap(depth) * (speed - safeDistance/50);
+        if (!safe(x, y)) return;
+
         if(depth > computedDepth)
         {
             computedDepth = depth;
@@ -136,16 +151,15 @@ class ComputerPlayer extends Player
 
     private int decisionGap(int depth)
     {
-        return 10*depth;
+        return 6*depth;
     }
 
     private int[][] Clone(int[][] array, int width, int height)
     {
         int[][] newArray = new int[width][height];
         for(int i = 0; i < width; i++)
-        {
-            if (height >= 0) System.arraycopy(array[i], 0, newArray[i], 0, height);
-        }
+            if (height >= 0)
+                System.arraycopy(array[i], 0, newArray[i], 0, height);
         return newArray;
     }
 
@@ -169,6 +183,23 @@ class ComputerPlayer extends Player
             }
         }
         return false;
+    }
+
+    private boolean safe(double x, double y)
+    {
+        double dx, dy;
+        double safeSquare = safeDistance * safeDistance - lineWidth;
+        for (Player p : players)
+        {
+            if(p.id != id)
+            {
+                dx = p.getX() - x;
+                dy = p.getY() - y;
+                if(dx * dx + dy * dy < safeSquare)
+                    return false;
+            }
+        }
+        return true;
     }
 }
 
