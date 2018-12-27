@@ -110,21 +110,26 @@ public class Main extends Application {
                         p.angle = random.nextDouble() * 2 * Math.PI;
                         p.setPosition(100 + random.nextInt(width - 200), 100 + random.nextInt(height - 200));
                     }
-                    speed = 1e-1;
+                    speed = 0.5;
                     counter = 0;
                 }
                 if(speed < maxSpeed) speed += 0.01;
                 Collections.shuffle(activePlayers);
                 LinkedList<Integer> unlucky = new LinkedList<>();
-                if(counter % 6 == 0)
+                if(counter % 4 == 0)
                 {
                     for (int i : activePlayers)
                     {
                         if(i >= humanPlayers.size())
                         {
                             ComputerPlayer p = computerPlayers.get(i - humanPlayers.size());
-                            p.computeInit(collisionMatrix);
-                            p.direction = p.computedDiretion;
+                            //noinspection SynchronizeOnNonFinalField
+                            synchronized (p.threadId)
+                            {
+                                p.threadId++;
+                                p.direction = p.computedDiretion;
+                            }
+                            p.computeInitAsync(collisionMatrix, activePlayers);
                         }
                     }
                 }

@@ -95,63 +95,90 @@ class ComputerPlayer extends Player
     private int width;
     private int height;
     static ArrayList<Player> players;
-    private int safeDistance;
-    private boolean found;
+    Integer threadId = 0;
+    private int computedStep;
 
-    void computeInit(int[][] map)
+    void computeInit(int[][] map, List<Integer> activePlayers)
     {
         int[][] mapCopy = Clone(map, width, height);
+        List<SimplePlayer> others = new LinkedList<>();
+        for (int i : activePlayers)
+        {
+            if(i != id)
+            {
+                Player p = players.get(i);
+                others.add(new SimplePlayer(p.getX(), p.getY(), p.angle));
+            }
+        }
         computedDepth = 0;
-        safeDistance = 0;
-        found = false;
-        compute(mapCopy, Direction.Straight, 1, Direction.Straight, getX(), getY(), angle, collisionValue);
-        safeDistance = 0;
-        compute(mapCopy, Direction.Right,    1, Direction.Right,    getX(), getY(), angle, collisionValue);
-        safeDistance = 0;
-        compute(mapCopy, Direction.Left,     1, Direction.Left,     getX(), getY(), angle, collisionValue);
+        computedStep = 0;
+        threadId++;
+        int tid = threadId;
+        compute(mapCopy, Direction.Straight, 1, Direction.Straight, getX(), getY(), angle, collisionValue, tid, others, 0);
+        compute(mapCopy, Direction.Right,    1, Direction.Right,    getX(), getY(), angle, collisionValue, tid, others, 0);
+        compute(mapCopy, Direction.Left,     1, Direction.Left,     getX(), getY(), angle, collisionValue, tid, others, 0);
     }
 
-    private void compute(int[][] map, Direction prev, int depth, Direction initial, double x, double y, double a, int cv)
+    void computeInitAsync(int[][] map, List<Integer> activePlayers)
     {
-        if(found) return;
-        if(depth > 10)
-        {
-            found = true;
-            return;
-        }
-        for(int i = 0; i < decisionGap(depth); i++)
-        {
-            x += speed * Math.cos(a);
-            y += speed * Math.sin(a);
-            switch (prev)
-            {
-                case Left:
-                    a -= angularSpeed;
-                    break;
-                case Right:
-                    a += angularSpeed;
-                    break;
-            }
-            cv++;
-            if (collide(x, y, cv, map)) return;
-        }
-        if(safeDistance < 100)
-            safeDistance += decisionGap(depth) * (speed - safeDistance/50);
-        if (!safe(x, y)) return;
+        Thread thread = new Thread(() -> computeInit(map, activePlayers));
+        thread.start();
+    }
 
-        if(depth > computedDepth)
+    private void compute(int[][] map, Direction prev, int depth, Direction initial, double x, double y, double a, int cv, int tid, List<SimplePlayer> others, int step)
+    {
+        //noinspection SynchronizeOnNonFinalField
+        synchronized (threadId)
         {
-            computedDepth = depth;
-            computedDiretion = initial;
+            if (tid < threadId)
+                return;
+            if(depth > 16)
+            {
+                threadId++;
+                return;
+            }
+            for (int i = 0; i < decisionGap(depth); i++)
+            {
+                step++;
+                if(step > computedStep)
+                {
+                    for (SimplePlayer sp : others)
+                    {
+                        sp.x += speed * Math.cos(sp.angle);
+                        sp.y += speed * Math.sin(sp.angle);
+                        collide(sp.x, sp.y, -step, map, -1);
+                    }
+                    computedStep = step;
+                }
+                x += speed * Math.cos(a);
+                y += speed * Math.sin(a);
+                switch (prev)
+                {
+                    case Left:
+                        a -= angularSpeed;
+                        break;
+                    case Right:
+                        a += angularSpeed;
+                        break;
+                }
+                cv++;
+                if (collide(x, y, cv, map, step)) return;
+            }
+
+            if (depth > computedDepth)
+            {
+                computedDepth = depth;
+                computedDiretion = initial;
+            }
         }
-        compute(map, Direction.Straight, depth + 1, initial, x, y, a, cv);
-        compute(map, Direction.Right,    depth + 1, initial, x, y, a, cv);
-        compute(map, Direction.Left,     depth + 1, initial, x, y, a, cv);
+        compute(map, Direction.Straight, depth + 1, initial, x, y, a, cv, tid, others, step);
+        compute(map, Direction.Right,    depth + 1, initial, x, y, a, cv, tid, others, step);
+        compute(map, Direction.Left,     depth + 1, initial, x, y, a, cv, tid, others, step);
     }
 
     private int decisionGap(int depth)
     {
-        return 6*depth;
+        return depth * 4;
     }
 
     private int[][] Clone(int[][] array, int width, int height)
@@ -163,7 +190,7 @@ class ComputerPlayer extends Player
         return newArray;
     }
 
-    private boolean collide(double x, double y, int value, int[][] map)
+    private boolean collide(double x, double y, int value, int[][] map, int step)
     {
         int i1,i2,j1,j2;
         i1 = (int)(x - lineWidth/2);
@@ -173,33 +200,35 @@ class ComputerPlayer extends Player
         if(i1 < 0 || j1 < 0 || i2 >= width || j2 >= height)
             return true;
         for (int i = i1; i <= i2; i++)
-
         {
             for (int j = j1; j <= j2; j++)
             {
                 if(map[i][j] > 0 && Math.abs(map[i][j] - value) > 0xf)
                     return true;
-                map[i][j] = value;
+                if(step < 0)
+                {
+                    map[i][j] = value;
+                    return false;
+                }
+                if(map[i][j] < 0 && map[i][j] >= -step)
+                    return true;
             }
         }
         return false;
     }
 
-    private boolean safe(double x, double y)
+    private class SimplePlayer
     {
-        double dx, dy;
-        double safeSquare = safeDistance * safeDistance - lineWidth;
-        for (Player p : players)
+        double x;
+        double y;
+        double angle;
+
+        SimplePlayer(double x, double y, double angle)
         {
-            if(p.id != id)
-            {
-                dx = p.getX() - x;
-                dy = p.getY() - y;
-                if(dx * dx + dy * dy < safeSquare)
-                    return false;
-            }
+            this.x = x;
+            this.y = y;
+            this.angle = angle;
         }
-        return true;
     }
 }
 
