@@ -123,10 +123,9 @@ public class Main extends Application {
                     if(i >= humanPlayers.size())
                     {
                         ComputerPlayer p = computerPlayers.get(i - humanPlayers.size());
-                        //noinspection SynchronizeOnNonFinalField
-                        synchronized (p.threadId)
+                        synchronized (p.threadID)
                         {
-                            p.threadId++;
+                            p.threadID.value++;
                             p.direction = p.computedDiretion;
                         }
                         p.computeInitAsync(collisionMatrix, activePlayers);

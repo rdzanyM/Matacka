@@ -95,7 +95,7 @@ class ComputerPlayer extends Player
     private int width;
     private int height;
     static ArrayList<Player> players;
-    Integer threadId = 0;
+    final ThreadID threadID = new ThreadID(0);
     private int computedStep;
 
     void computeInit(int[][] map, List<Integer> activePlayers)
@@ -114,8 +114,8 @@ class ComputerPlayer extends Player
         }
         computedDepth = 0;
         computedStep = 0;
-        threadId++;
-        int tid = threadId;
+        threadID.value++;
+        int tid = threadID.value;
         compute(mapCopy, Direction.Straight, 1, Direction.Straight, getX(), getY(), angle, collisionValue, tid, others, 0);
         compute(mapCopy, Direction.Right,    1, Direction.Right,    getX(), getY(), angle, collisionValue, tid, others, 0);
         compute(mapCopy, Direction.Left,     1, Direction.Left,     getX(), getY(), angle, collisionValue, tid, others, 0);
@@ -129,14 +129,13 @@ class ComputerPlayer extends Player
 
     private void compute(int[][] map, Direction prev, int depth, Direction initial, double x, double y, double a, int cv, int tid, List<SimplePlayer> others, int step)
     {
-        //noinspection SynchronizeOnNonFinalField
-        synchronized (threadId)
+        synchronized (threadID)
         {
-            if (tid < threadId)
+            if (tid < threadID.value)
                 return;
             if(depth > 20)
             {
-                threadId++;
+                threadID.value++;
                 return;
             }
             for (int i = 0; i < decisionGap(depth); i++)
@@ -249,6 +248,15 @@ class ComputerPlayer extends Player
             this.y = y;
             this.angle = angle;
             this.direction = direction;
+        }
+    }
+
+    class ThreadID
+    {
+        int value;
+        ThreadID(int value)
+        {
+            this.value = value;
         }
     }
 }
