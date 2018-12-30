@@ -2,14 +2,21 @@ package sample;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Alert;
 import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -81,15 +88,17 @@ public class Main extends Application {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setLineWidth(lineWidth);
 
-        if(!setPlayers()) return;
-
+        if (!setPlayers()) return;
+        Label l = new Label("Get " + Player.limit + " points\nand win");
+        l.setTextAlignment(TextAlignment.CENTER);
+        l.setAlignment(Pos.CENTER);
+        l.setPadding(new Insets(1,4,1,4));
+        scoreboard.getChildren().add(l);
         for (Player p : players)
         {
             scoreboard.getChildren().add(p.getDisplay());
             gameArea.getChildren().add(p.getHead());
         }
-
-
         theStage.show();
 
         AnimationTimer animator = new AnimationTimer()
@@ -109,11 +118,12 @@ public class Main extends Application {
                     {
                         p.angle = random.nextDouble() * 2 * Math.PI;
                         p.setPosition(100 + random.nextInt(width - 200), 100 + random.nextInt(height - 200));
+                        p.pretender = p.getPoints() == Player.limit;
                     }
-                    speed = 0.5;
+                    speed = 0.6;
                     counter = 0;
                 }
-                if(speed < maxSpeed) speed += 0.01;
+                if(speed < maxSpeed) speed += 0.02;
                 Collections.shuffle(activePlayers);
                 LinkedList<Integer> unlucky = new LinkedList<>();
                 if(activePlayers.size() == 1  && counter % 0xff == 0)
@@ -156,18 +166,32 @@ public class Main extends Application {
                     p.setPosition(px, py);
 
                 }
+                int points = players.size() - activePlayers.size() + 1;
                 for (int i : unlucky)
                 {
-                    players.get(i).addPoints(unlucky.size() - 1);
+                    players.get(i).addPoints((unlucky.size() - 1) * points);
                     activePlayers.remove(Integer.valueOf(i));
+                }
+                if (activePlayers.size() == 1 && players.get(activePlayers.get(0)).pretender)
+                {
+                    this.stop();
+                    Platform.runLater(() ->
+                    {
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Game over");
+                        alert.setHeaderText("Player " + (activePlayers.get(0) + 1) + " won.");
+                        alert.setContentText("Thanks for playing!");
+                        alert.show();
+                    });
                 }
                 for (int i : activePlayers)
                 {
-                    players.get(i).addPoints(unlucky.size());
+                    players.get(i).addPoints(unlucky.size() * points);
                 }
                 counter++;
             }
         };
+
         animator.start();
     }
 
@@ -213,6 +237,7 @@ public class Main extends Application {
             computerPlayers.add(p);
         }
         ComputerPlayer.players = players;
+        Player.limit = players.size() * (players.size() + 1);
         return true;
     }
 

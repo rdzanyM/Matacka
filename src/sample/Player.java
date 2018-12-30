@@ -23,6 +23,8 @@ class Player {
     Direction direction = Direction.Straight;
     private Point2D position = new Point2D.Double(0,0);
     private Circle head = new Circle(0,0,2, Color.BLACK);
+    static int limit;
+    boolean pretender;
 
     double getX()     { return position.getX(); }
     double getY()     { return position.getY(); }
@@ -32,8 +34,16 @@ class Player {
 
     void addPoints(int p)
     {
-        points += p;
-        display.points.setText(Integer.toString(points));
+        if(points < limit)
+        {
+            points += p;
+            if (points >= limit)
+            {
+                points = limit;
+                display.points.setTextFill(Color.LIGHTGREEN);
+            }
+            display.points.setText(Integer.toString(points));
+        }
     }
 
     void setPosition(double x, double y)
@@ -98,8 +108,9 @@ class ComputerPlayer extends Player
     final ThreadID threadID = new ThreadID(0);
     private int computedStep;
 
-    void computeInit(int[][] map, List<Integer> activePlayers)
+    private void computeInit(int[][] map, List<Integer> activePlayers)
     {
+        int tid = threadID.value;
         int[][] mapCopy = Clone(map, width, height);
         List<SimplePlayer> others = new LinkedList<>();
         for (int i : activePlayers)
@@ -114,8 +125,6 @@ class ComputerPlayer extends Player
         }
         computedDepth = 0;
         computedStep = 0;
-        threadID.value++;
-        int tid = threadID.value;
         compute(mapCopy, Direction.Straight, 1, Direction.Straight, getX(), getY(), angle, collisionValue, tid, others, 0);
         compute(mapCopy, Direction.Right,    1, Direction.Right,    getX(), getY(), angle, collisionValue, tid, others, 0);
         compute(mapCopy, Direction.Left,     1, Direction.Left,     getX(), getY(), angle, collisionValue, tid, others, 0);
