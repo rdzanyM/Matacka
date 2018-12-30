@@ -34,12 +34,13 @@ public class Main extends Application {
     private ArrayList<Player> humanPlayers = new ArrayList<>();
     private ArrayList<ComputerPlayer> computerPlayers = new ArrayList<>();
     private int[][] collisionMatrix = new int[width][height];
-    private ArrayList<KeyCode> keys = new ArrayList<KeyCode>() {{
-        add(KeyCode.LEFT);  add(KeyCode.RIGHT);
-        add(KeyCode.Q);     add(KeyCode.E);
-        add(KeyCode.DIGIT7);add(KeyCode.DIGIT9);
-        add(KeyCode.Z);     add(KeyCode.C);
-        add(KeyCode.COMMA); add(KeyCode.PERIOD);
+    private Hashtable<KeyCode, Integer> keys = new Hashtable<KeyCode, Integer>()
+    {{
+        put(KeyCode.LEFT, -1);  put(KeyCode.RIGHT, 1);
+        put(KeyCode.Q, -2);     put(KeyCode.E, 2);
+        put(KeyCode.DIGIT7, -3);put(KeyCode.DIGIT9, 3);
+        put(KeyCode.Z, -4);     put(KeyCode.C, 4);
+        put(KeyCode.COMMA, -5); put(KeyCode.PERIOD, 5);
     }};
     private Random random = new Random();
     private List<Integer> activePlayers = new LinkedList<>();   //list of ids of active(still moving) players in a round
@@ -56,22 +57,25 @@ public class Main extends Application {
         theStage.setScene( theScene );
 
         theScene.setOnKeyReleased(event -> {
-            for (int i = 0; i < humanPlayers.size() * 2; i++)
+            if(keys.containsKey(event.getCode()))
             {
-                if(keys.get(i).equals(event.getCode()))
+                int i = keys.get(event.getCode());
+                if(Math.abs(keys.get(event.getCode())) <= humanPlayers.size())
                 {
-                    humanPlayers.get(i / 2).direction = Player.Direction.Straight;
-                    return;
+                    if(i > 0 && humanPlayers.get(i - 1).direction == Player.Direction.Right)
+                        humanPlayers.get(i - 1).direction = Player.Direction.Straight;
+                    else if(i < 0 && humanPlayers.get(-(i + 1)).direction == Player.Direction.Left)
+                        humanPlayers.get(-(i + 1)).direction = Player.Direction.Straight;
                 }
             }
         });
         theScene.setOnKeyPressed(event -> {
-            for (int i = 0; i < humanPlayers.size() * 2; i++)
+            if(keys.containsKey(event.getCode()))
             {
-                if(keys.get(i).equals(event.getCode()))
+                int i = keys.get(event.getCode());
+                if(Math.abs(keys.get(event.getCode())) <= humanPlayers.size())
                 {
-                    humanPlayers.get(i / 2).direction = (i % 2 == 0) ? Player.Direction.Left : Player.Direction.Right;
-                    return;
+                    humanPlayers.get(Math.abs(i) - 1).direction = (i > 0) ? Player.Direction.Right : Player.Direction.Left;
                 }
             }
         });
