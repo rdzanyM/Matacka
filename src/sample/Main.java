@@ -81,7 +81,7 @@ public class Main extends Application {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setLineWidth(lineWidth);
 
-        setPlayers();
+        if(!setPlayers()) return;
 
         for (Player p : players)
         {
@@ -116,21 +116,20 @@ public class Main extends Application {
                 if(speed < maxSpeed) speed += 0.01;
                 Collections.shuffle(activePlayers);
                 LinkedList<Integer> unlucky = new LinkedList<>();
-                if(counter % 4 == 0)
+                if(activePlayers.size() == 1  && counter % 0xff == 0)
+                    activePlayers.clear();
+                for (int i : activePlayers)
                 {
-                    for (int i : activePlayers)
+                    if(i >= humanPlayers.size())
                     {
-                        if(i >= humanPlayers.size())
+                        ComputerPlayer p = computerPlayers.get(i - humanPlayers.size());
+                        //noinspection SynchronizeOnNonFinalField
+                        synchronized (p.threadId)
                         {
-                            ComputerPlayer p = computerPlayers.get(i - humanPlayers.size());
-                            //noinspection SynchronizeOnNonFinalField
-                            synchronized (p.threadId)
-                            {
-                                p.threadId++;
-                                p.direction = p.computedDiretion;
-                            }
-                            p.computeInitAsync(collisionMatrix, activePlayers);
+                            p.threadId++;
+                            p.direction = p.computedDiretion;
                         }
+                        p.computeInitAsync(collisionMatrix, activePlayers);
                     }
                 }
                 for (int i : activePlayers)
@@ -167,17 +166,17 @@ public class Main extends Application {
                 {
                     players.get(i).addPoints(unlucky.size());
                 }
+                counter++;
             }
         };
         animator.start();
     }
 
-    private void setPlayers()
+    private boolean setPlayers()
     {
         players.clear();
         humanPlayers.clear();
-        int total = 2;
-        int humans = 1;
+        int total, humans;
         List<Integer> choices;
         Optional<Integer> result;
         ChoiceDialog<Integer> dialog;
@@ -189,6 +188,8 @@ public class Main extends Application {
         result = dialog.showAndWait();
         if (result.isPresent())
             total = result.get();
+        else
+            return false;
         choices = IntStream.rangeClosed(0, total).boxed().collect(Collectors.toList());
         dialog = new ChoiceDialog<>(1, choices);
         dialog.setTitle("Game settings");
@@ -197,6 +198,8 @@ public class Main extends Application {
         result = dialog.showAndWait();
         if (result.isPresent())
             humans = result.get();
+        else
+            return false;
 
         for (int i = 0; i < humans; i++)
         {
@@ -211,6 +214,7 @@ public class Main extends Application {
             computerPlayers.add(p);
         }
         ComputerPlayer.players = players;
+        return true;
     }
 
     private boolean collide(double x, double y, int value)

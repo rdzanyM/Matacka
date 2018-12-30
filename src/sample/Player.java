@@ -107,7 +107,9 @@ class ComputerPlayer extends Player
             if(i != id)
             {
                 Player p = players.get(i);
-                others.add(new SimplePlayer(p.getX(), p.getY(), p.angle));
+                others.add(new SimplePlayer(p.getX(), p.getY(), p.angle, Direction.Straight));
+                others.add(new SimplePlayer(p.getX(), p.getY(), p.angle, Direction.Right));
+                others.add(new SimplePlayer(p.getX(), p.getY(), p.angle, Direction.Left));
             }
         }
         computedDepth = 0;
@@ -132,7 +134,7 @@ class ComputerPlayer extends Player
         {
             if (tid < threadId)
                 return;
-            if(depth > 16)
+            if(depth > 20)
             {
                 threadId++;
                 return;
@@ -144,9 +146,22 @@ class ComputerPlayer extends Player
                 {
                     for (SimplePlayer sp : others)
                     {
-                        sp.x += speed * Math.cos(sp.angle);
-                        sp.y += speed * Math.sin(sp.angle);
-                        collide(sp.x, sp.y, -step, map, -1);
+                        if(sp.alive)
+                        {
+                            sp.x += speed * Math.cos(sp.angle);
+                            sp.y += speed * Math.sin(sp.angle);
+                            switch (sp.direction)
+                            {
+                                case Left:
+                                    sp.angle -= angularSpeed;
+                                    break;
+                                case Right:
+                                    sp.angle += angularSpeed;
+                                    break;
+                            }
+                            if (collide(sp.x, sp.y, -step, map, -1))
+                                sp.alive = false;
+                        }
                     }
                     computedStep = step;
                 }
@@ -203,13 +218,16 @@ class ComputerPlayer extends Player
         {
             for (int j = j1; j <= j2; j++)
             {
-                if(map[i][j] > 0 && Math.abs(map[i][j] - value) > 0xf)
-                    return true;
                 if(step < 0)
                 {
-                    map[i][j] = value;
+                    if(map[i][j] == 0)
+                        map[i][j] = value;
+                    else
+                        return map[i][j] > value;
                     return false;
                 }
+                if(map[i][j] > 0 && Math.abs(map[i][j] - value) > 0xf)
+                    return true;
                 if(map[i][j] < 0 && map[i][j] >= -step)
                     return true;
             }
@@ -222,12 +240,15 @@ class ComputerPlayer extends Player
         double x;
         double y;
         double angle;
+        Direction direction;
+        boolean alive = true;
 
-        SimplePlayer(double x, double y, double angle)
+        SimplePlayer(double x, double y, double angle, Direction direction)
         {
             this.x = x;
             this.y = y;
             this.angle = angle;
+            this.direction = direction;
         }
     }
 }
