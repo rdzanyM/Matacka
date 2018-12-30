@@ -236,11 +236,16 @@ public class Main extends Application {
         }
         for (int i = humans; i < total; i++)
         {
-            ComputerPlayer p = new ComputerPlayer(i, maxSpeed, angularSpeed, lineWidth, width, height);
+            ComputerPlayer p = new ComputerPlayer(i);
             players.add(p);
             computerPlayers.add(p);
         }
+        ComputerPlayer.width = width;
+        ComputerPlayer.height = height;
+        ComputerPlayer.speed = maxSpeed;
         ComputerPlayer.players = players;
+        ComputerPlayer.lineWidth = lineWidth;
+        ComputerPlayer.angularSpeed = angularSpeed;
         Player.limit = players.size() * (players.size() + 1);
         return true;
     }

@@ -87,26 +87,22 @@ class Player {
 
 class ComputerPlayer extends Player
 {
-    ComputerPlayer(int id, double speed, double angularSpeed, double lineWidth, int width, int height)
+
+    static int width;
+    static int height;
+    static double speed;
+    static double lineWidth;
+    static double angularSpeed;
+    static ArrayList<Player> players;
+    private int computedStep;
+    private int computedDepth;
+    Direction computedDiretion = Direction.Straight;
+    final ThreadID threadID = new ThreadID(0);
+
+    ComputerPlayer(int id)
     {
         super(id);
-        this.speed = speed;
-        this.angularSpeed = angularSpeed;
-        this.lineWidth = lineWidth;
-        this.width = width;
-        this.height = height;
     }
-
-    Direction computedDiretion = Direction.Straight;
-    private int computedDepth;
-    private double speed;
-    private double angularSpeed;
-    private double lineWidth;
-    private int width;
-    private int height;
-    static ArrayList<Player> players;
-    final ThreadID threadID = new ThreadID(0);
-    private int computedStep;
 
     private void computeInit(int[][] map, List<Integer> activePlayers)
     {
@@ -142,7 +138,7 @@ class ComputerPlayer extends Player
         {
             if (tid < threadID.value)
                 return;
-            if(depth > 20)
+            if(depth > 16)
             {
                 threadID.value++;
                 return;
@@ -216,10 +212,11 @@ class ComputerPlayer extends Player
     private boolean collide(double x, double y, int value, int[][] map, int step)
     {
         int i1,i2,j1,j2;
-        i1 = (int)(x - lineWidth/2);
-        i2 = (int)(x + lineWidth/2);
-        j1 = (int)(y - lineWidth/2);
-        j2 = (int)(y + lineWidth/2);
+        double r = lineWidth/2;
+        i1 = (int)(x - r);
+        i2 = (int)(x + r);
+        j1 = (int)(y - r);
+        j2 = (int)(y + r);
         if(i1 < 0 || j1 < 0 || i2 >= width || j2 >= height)
             return true;
         for (int i = i1; i <= i2; i++)
