@@ -96,7 +96,7 @@ class ComputerPlayer extends Player
     static ArrayList<Player> players;
     private int computedStep;
     private int computedDepth;
-    Direction computedDiretion = Direction.Straight;
+    Direction computedDirection = Direction.Straight;
     final ThreadID threadID = new ThreadID(0);
 
     ComputerPlayer(int id)
@@ -187,7 +187,7 @@ class ComputerPlayer extends Player
             if (depth > computedDepth)
             {
                 computedDepth = depth;
-                computedDiretion = initial;
+                computedDirection = initial;
             }
         }
         compute(map, Direction.Straight, depth + 1, initial, x, y, a, cv, tid, others, step);

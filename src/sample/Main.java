@@ -23,8 +23,8 @@ import java.util.stream.IntStream;
 public class Main extends Application {
 
     private int counter = 0;
-    private final int width = 1024;     //width  of game area
-    private final int height = 800;     //height of game area
+    private int width;     //width  of game area
+    private int height;     //height of game area
     private final double lineWidth = 3; //width of players' trails
     private double speed;                       //players' real speed (lower than max at the beginning of a round)
     private final double maxSpeed = 2;          //players' regular speed
@@ -33,7 +33,7 @@ public class Main extends Application {
     private ArrayList<Player> players = new ArrayList<>();
     private ArrayList<Player> humanPlayers = new ArrayList<>();
     private ArrayList<ComputerPlayer> computerPlayers = new ArrayList<>();
-    private int[][] collisionMatrix = new int[width][height];
+    private int[][] collisionMatrix;
     private Hashtable<KeyCode, Integer> keys = new Hashtable<KeyCode, Integer>()
     {{
         put(KeyCode.LEFT, -1);  put(KeyCode.RIGHT, 1);
@@ -79,6 +79,7 @@ public class Main extends Application {
                 }
             }
         });
+        if (!setPlayers()) return;
         Canvas canvas = new Canvas( width, height );
         Pane gameArea = new Pane(canvas);
         gameArea.setMaxWidth(width);
@@ -92,7 +93,6 @@ public class Main extends Application {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setLineWidth(lineWidth);
 
-        if (!setPlayers()) return;
         Label l = new Label("Get " + Player.limit + " points\nand win");
         l.setTextAlignment(TextAlignment.CENTER);
         l.setAlignment(Pos.CENTER);
@@ -103,6 +103,7 @@ public class Main extends Application {
             scoreboard.getChildren().add(p.getDisplay());
             gameArea.getChildren().add(p.getHead());
         }
+        //theStage.setResizable(false);
         theStage.show();
 
         AnimationTimer animator = new AnimationTimer()
@@ -140,7 +141,7 @@ public class Main extends Application {
                         synchronized (p.threadID)
                         {
                             p.threadID.value++;
-                            p.direction = p.computedDiretion;
+                            p.direction = p.computedDirection;
                         }
                         p.computeInitAsync(collisionMatrix, activePlayers);
                     }
@@ -240,6 +241,9 @@ public class Main extends Application {
             players.add(p);
             computerPlayers.add(p);
         }
+        width = 350 + 80 * total;
+        height = 250 + 50 * total;
+        collisionMatrix = new int[width][height];
         ComputerPlayer.width = width;
         ComputerPlayer.height = height;
         ComputerPlayer.speed = maxSpeed;
