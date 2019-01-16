@@ -23,28 +23,51 @@ import java.util.stream.IntStream;
 public class Main extends Application {
 
     private int counter = 0;
-    private int width;     //width  of game area
+    private int width;      //width  of game area
     private int height;     //height of game area
     private final double lineWidth = 3; //width of players' trails
     private double speed;                       //players' real speed (lower than max at the beginning of a round)
     private final double maxSpeed = 2;          //players' regular speed
-    private final double angularSpeed = 0.03;   //players' angular speed
+    private final double angularSpeed = 0.033;  //players' angular speed
                                                 //players' minimal turn radius is speed/angularSpeed
     private ArrayList<Player> players = new ArrayList<>();
     private ArrayList<Player> humanPlayers = new ArrayList<>();
     private ArrayList<ComputerPlayer> computerPlayers = new ArrayList<>();
     private int[][] collisionMatrix;
-    private Hashtable<KeyCode, Integer> keys = new Hashtable<KeyCode, Integer>()
+    private final Hashtable<KeyCode, Integer> keys = new Hashtable<KeyCode, Integer>()
     {{
-        put(KeyCode.LEFT, -1);  put(KeyCode.RIGHT, 1);
-        put(KeyCode.Q, -2);     put(KeyCode.E, 2);
-        put(KeyCode.DIGIT7, -3);put(KeyCode.DIGIT9, 3);
-        put(KeyCode.Z, -4);     put(KeyCode.C, 4);
-        put(KeyCode.COMMA, -5); put(KeyCode.PERIOD, 5);
+        put(KeyCode.LEFT,   -1);    put(KeyCode.RIGHT,  1);
+        put(KeyCode.DIGIT1, -2);    put(KeyCode.DIGIT2, 2);
+        put(KeyCode.DIGIT9, -3);    put(KeyCode.DIGIT0, 3);
+        put(KeyCode.DIGIT5, -4);    put(KeyCode.DIGIT6, 4);
+        put(KeyCode.Z,      -5);    put(KeyCode.X,      5);
+        put(KeyCode.COMMA,  -6);    put(KeyCode.PERIOD, 6);
+        put(KeyCode.V,      -7);    put(KeyCode.B,      7);
+        put(KeyCode.D,      -8);    put(KeyCode.F,      8);
+        put(KeyCode.J,      -9);    put(KeyCode.K,      9);
+        put(KeyCode.MINUS,  -10);   put(KeyCode.EQUALS, 10);
+        put(KeyCode.DIGIT3, -11);   put(KeyCode.DIGIT4, 11);
+        put(KeyCode.DIGIT7, -12);   put(KeyCode.DIGIT8, 12);
+    }};
+    private final ArrayList<String> controls = new ArrayList<String>()
+    {{
+        add("←"); add("→");
+        add("1"); add("2");
+        add("9"); add("0");
+        add("5"); add("6");
+        add("Z"); add("X");
+        add(","); add(".");
+        add("V"); add("B");
+        add("D"); add("F");
+        add("J"); add("K");
+        add("-"); add("=");
+        add("3"); add("4");
+        add("7"); add("8");
     }};
     private Random random = new Random();
     private List<Integer> activePlayers = new LinkedList<>();   //list of ids of active(still moving) players in a round
     private double chance = 3e-3;                               //chance that trail drawing will be suppressed in a frame
+
 
     @Override
     public void start(Stage theStage)
@@ -143,7 +166,7 @@ public class Main extends Application {
                             p.threadID.value++;
                             p.direction = p.computedDirection;
                         }
-                        p.computeInitAsync(collisionMatrix, activePlayers);
+                        p.computeInitAsync(collisionMatrix, activePlayers.toArray(new Integer[0]));
                     }
                 }
                 for (int i : activePlayers)
@@ -228,7 +251,15 @@ public class Main extends Application {
             humans = result.get();
         else
             return false;
-
+        StringBuilder tip = new StringBuilder();
+        for (int i = 0; i < humans; i ++)
+        {
+            tip.append("Player ").append(i + 1).append(" \tLeft: ").append(controls.get(2 * i)).append(" \tRight: ").append(controls.get(2 * i + 1)).append("\n");
+        }
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, tip + "\nPlayers' scores and colors will be displayed on the right side of the window.");
+        alert.setTitle("Controls");
+        alert.setHeaderText("Here are your controls");
+        alert.showAndWait();
         for (int i = 0; i < humans; i++)
         {
             Player p = new Player(i);

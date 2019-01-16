@@ -87,13 +87,13 @@ class Player {
 
 class ComputerPlayer extends Player
 {
-
     static int width;
     static int height;
     static double speed;
     static double lineWidth;
     static double angularSpeed;
     static ArrayList<Player> players;
+    private int[][] othersMap;
     private int computedStep;
     private int computedDepth;
     Direction computedDirection = Direction.Straight;
@@ -104,10 +104,9 @@ class ComputerPlayer extends Player
         super(id);
     }
 
-    private void computeInit(int[][] map, List<Integer> activePlayers)
+    private void computeInit(final int[][] map, Integer[] activePlayers)
     {
         int tid = threadID.value;
-        int[][] mapCopy = Clone(map, width, height);
         List<SimplePlayer> others = new LinkedList<>();
         for (int i : activePlayers)
         {
@@ -119,20 +118,28 @@ class ComputerPlayer extends Player
                 others.add(new SimplePlayer(p.getX(), p.getY(), p.angle, Direction.Left));
             }
         }
-        computedDepth = 0;
-        computedStep = 0;
-        compute(mapCopy, Direction.Straight, 1, Direction.Straight, getX(), getY(), angle, collisionValue, tid, others, 0);
-        compute(mapCopy, Direction.Right,    1, Direction.Right,    getX(), getY(), angle, collisionValue, tid, others, 0);
-        compute(mapCopy, Direction.Left,     1, Direction.Left,     getX(), getY(), angle, collisionValue, tid, others, 0);
+        synchronized (threadID)
+        {
+            computedDepth = 0;
+            computedStep = 0;
+            //int[][] mapCopy = Clone(map, width, height);
+            othersMap = new int[width][height];
+        }
+        //compute(mapCopy, Direction.Straight, 1, Direction.Straight, getX(), getY(), angle, collisionValue, tid, others, 0);
+        //compute(mapCopy, Direction.Right,    1, Direction.Right,    getX(), getY(), angle, collisionValue, tid, others, 0);
+        //compute(mapCopy, Direction.Left,     1, Direction.Left,     getX(), getY(), angle, collisionValue, tid, others, 0);
+        compute(map, Direction.Straight, 1, Direction.Straight, getX(), getY(), angle, collisionValue, tid, others, 0);
+        compute(map, Direction.Right,    1, Direction.Right,    getX(), getY(), angle, collisionValue, tid, others, 0);
+        compute(map, Direction.Left,     1, Direction.Left,     getX(), getY(), angle, collisionValue, tid, others, 0);
     }
 
-    void computeInitAsync(int[][] map, List<Integer> activePlayers)
+    void computeInitAsync(final int[][] map, Integer[] activePlayers)
     {
         Thread thread = new Thread(() -> computeInit(map, activePlayers));
         thread.start();
     }
 
-    private void compute(int[][] map, Direction prev, int depth, Direction initial, double x, double y, double a, int cv, int tid, List<SimplePlayer> others, int step)
+    private void compute(final int[][] map, Direction prev, int depth, Direction initial, double x, double y, double a, int cv, int tid, List<SimplePlayer> others, int step)
     {
         synchronized (threadID)
         {
@@ -209,7 +216,7 @@ class ComputerPlayer extends Player
         return newArray;
     }
 
-    private boolean collide(double x, double y, int value, int[][] map, int step)
+    private boolean collide(double x, double y, int value, final int[][] map, int step)
     {
         int i1,i2,j1,j2;
         double r = lineWidth/2;
@@ -225,15 +232,15 @@ class ComputerPlayer extends Player
             {
                 if(step < 0)
                 {
-                    if(map[i][j] == 0)
-                        map[i][j] = value;
+                    if(map[i][j] == 0 && othersMap[i][j] == 0)
+                        othersMap[i][j] = value;
                     else
-                        return map[i][j] > value;
+                        return othersMap[i][j] > value;
                     return false;
                 }
-                if(map[i][j] > 0 && Math.abs(map[i][j] - value) > 0xf)
+                if(map[i][j] > 0 && Math.abs(map[i][j] - value) > 0xf)//standard collision
                     return true;
-                if(map[i][j] < 0 && map[i][j] >= -step)
+                if(othersMap[i][j] < 0 && othersMap[i][j] >= -step)//possible collision with other player
                     return true;
             }
         }
