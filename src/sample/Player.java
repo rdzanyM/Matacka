@@ -8,6 +8,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Font;
 import java.awt.geom.Point2D;
 import java.util.*;
 
@@ -76,7 +77,12 @@ class Player {
         Display(Paint color)
         {
             Circle c = new Circle(20, 20, 12, color);
-            icon = new Pane(c);
+            Label p = new Label("P " + (id + 1));
+            p.setFont(new Font("Cambria", 10));
+            p.setPrefSize(40,40);
+            p.setAlignment(Pos.CENTER);
+            p.setStyle("-fx-font-weight: bold;");
+            icon = new Pane(c, p);
             icon.setPrefSize(40, 40);
             points.setPrefSize(40,40);
             points.setAlignment(Pos.CENTER);

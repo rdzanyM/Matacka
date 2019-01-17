@@ -209,7 +209,8 @@ public class Main extends Application {
                         alert.setTitle("Game over");
                         alert.setHeaderText("Player " + (activePlayers.get(0) + 1) + " won.");
                         alert.setContentText("Thanks for playing!");
-                        alert.show();
+                        alert.showAndWait();
+                        System.exit(0);
                     });
                 }
                 for (int i : activePlayers)
